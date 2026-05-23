@@ -1,0 +1,15 @@
+{
+  "stocks": [
+    {
+      "ticker": "CPF.BK",
+      "name": "Charoen Pokphand Foods",
+      "notes": ""
+    },
+    {
+      "ticker": "MINT.BK",
+      "name": "Minor International",
+      "notes": ""
+    }
+  ],
+  "updatedAt": "2026-05-08T09:58:55.198884+00:00"
+}
