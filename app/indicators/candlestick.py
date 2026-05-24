@@ -16,12 +16,7 @@ import talib
 import pandas as pd
 
 from app.models.schemas import CandlestickData, CandlestickPattern
-
-
-def _format_date(ts) -> str:
-    if hasattr(ts, "hour") and ts.hour != 0:
-        return ts.strftime("%Y-%m-%d %H:%M")
-    return ts.strftime("%Y-%m-%d")
+from app.indicators import format_indicator_date
 
 # ── Pattern definitions ──────────────────────────────────────────────
 # Each entry: (display_name, ta-lib_function)
@@ -85,7 +80,7 @@ def calculate_candlestick(df: pd.DataFrame) -> CandlestickData:
             detected.append(
                 CandlestickPattern(
                     name=name,
-                    date=_format_date(dates[i]),
+                    date=format_indicator_date(dates[i]),
                     direction=direction,
                     barsAgo=bars_ago,
                 )

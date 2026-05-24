@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 import talib
 import pandas as pd
 
@@ -18,7 +19,6 @@ def calculate_macd(df: pd.DataFrame) -> MACDData:
         close, fastperiod=12, slowperiod=26, signalperiod=9
     )
 
-    import math
     macd_val = float(macd[-1])
     signal_val = float(signal[-1])
     hist_val = float(histogram[-1])

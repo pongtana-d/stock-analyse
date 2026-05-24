@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime, timezone
 
 import yfinance as yf
@@ -8,16 +9,20 @@ from app.models.schemas import HealthResponse
 router = APIRouter()
 
 
-@router.get("/health", response_model=HealthResponse)
-async def health_check():
-    yf_status = "ok"
+def _check_yfinance() -> str:
     try:
         ticker = yf.Ticker("^SET.BK")
         hist = ticker.history(period="1d")
         if hist.empty:
-            yf_status = "error"
+            return "error"
+        return "ok"
     except Exception:
-        yf_status = "error"
+        return "error"
+
+
+@router.get("/health", response_model=HealthResponse)
+async def health_check():
+    yf_status = await asyncio.to_thread(_check_yfinance)
 
     return HealthResponse(
         status="ok",

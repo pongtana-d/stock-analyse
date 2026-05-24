@@ -1,0 +1,185 @@
+{% extends "base.html" %} {% block title %}Analyse · SET Analyze{% endblock %} {% block content %}
+<div class="mb-6">
+  <h1 class="text-3xl font-extrabold font-display tracking-tight text-slate-900 mb-1">AI Technical Analysis</h1>
+  <p class="text-slate-500 text-sm">
+    Analyse individual SET stocks with AI-powered multi-timeframe technical indicators.
+  </p>
+</div>
+
+<!-- Input Card -->
+<div class="bg-white border border-slate-200 rounded-xl p-6 mb-8 shadow-sm">
+  <form action="/analysis/run" method="post" class="flex flex-col md:flex-row md:items-end gap-4" id="analysis-form">
+    <div class="flex-1">
+      <label for="ticker-input" class="block mb-2 text-xs font-semibold text-slate-500 uppercase tracking-wider"
+        >Ticker Symbol</label
+      >
+      <input
+        type="text"
+        id="ticker-input"
+        name="ticker"
+        placeholder="e.g. KBANK, CPF"
+        required
+        value="{{ ticker }}"
+        class="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block p-3 placeholder-slate-400 transition-colors uppercase focus:bg-white"
+      />
+    </div>
+
+    <div>
+      <button
+        type="submit"
+        id="analyse-submit-btn"
+        class="w-full md:w-auto text-slate-950 bg-emerald-400 hover:bg-emerald-500 font-bold rounded-lg text-sm px-8 py-3 transition-colors focus:ring-4 focus:ring-emerald-200 flex items-center justify-center gap-2"
+      >
+        <svg
+          id="btn-spinner"
+          class="hidden animate-spin h-4 w-4 text-slate-950"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path
+            class="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+          ></path>
+        </svg>
+        <span id="btn-text">Analyse</span>
+      </button>
+    </div>
+  </form>
+</div>
+
+<!-- Results Section -->
+{% if record %}
+<div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 border-b border-slate-100 pb-4">
+    <div class="flex items-center gap-3">
+      <h3 class="text-2xl font-bold font-display text-slate-900 tracking-wide">{{ record.ticker }}</h3>
+
+      <!-- Signal Badges -->
+      {% set sig = (record.signal or '')|upper %} {% if sig == 'BUY' %}
+      <span
+        class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200"
+        >BUY</span
+      >
+      {% elif sig == 'BUY ON DIP' %}
+      <span
+        class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-teal-50 text-teal-700 border border-teal-200"
+        >BUY ON DIP</span
+      >
+      {% elif sig == 'SELL' %}
+      <span
+        class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200"
+        >SELL</span
+      >
+      {% elif sig == 'TAKE PROFIT' %}
+      <span
+        class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200"
+        >TAKE PROFIT</span
+      >
+      {% elif sig == 'REDUCE' %}
+      <span
+        class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-orange-50 text-orange-700 border border-orange-200"
+        >REDUCE</span
+      >
+      {% elif sig == 'HOLD' %}
+      <span
+        class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200"
+        >HOLD</span
+      >
+      {% else %}
+      <span
+        class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-slate-50 text-slate-500 border border-slate-200"
+        >{{ record.signal or '—' }}</span
+      >
+      {% endif %} {% if record.confidence %} {% if record.confidence == 'High' %}
+      <span
+        class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200/50"
+        >Conf: {{ record.confidence }}</span
+      >
+      {% elif record.confidence == 'Medium' %}
+      <span
+        class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-teal-50 text-teal-700 border border-teal-200/50"
+        >Conf: {{ record.confidence }}</span
+      >
+      {% else %}
+      <span
+        class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-slate-50 text-slate-655 border border-slate-200/50"
+        >Conf: {{ record.confidence }}</span
+      >
+      {% endif %} {% endif %}
+    </div>
+    <span class="text-xs text-slate-550 font-mono">{{ record.analysis_date|format_datetime }}</span>
+  </div>
+
+  <div
+    class="ai-response-markdown prose prose-slate max-w-none text-slate-700 bg-slate-50 border border-slate-200 p-6 rounded-xl my-4 leading-relaxed"
+  >
+    <div class="hidden raw-markdown">{{ record.ai_response }}</div>
+    <div class="rendered-html"></div>
+  </div>
+
+  <div class="text-xs text-slate-500 mt-4 pt-4 border-t border-slate-100 flex items-center gap-1.5">
+    <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+      ></path>
+    </svg>
+    <span
+      >Model:
+      <span class="font-mono text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200"
+        >{{ record.ai_model }}</span
+      ></span
+    >
+  </div>
+</div>
+{% else %}
+<!-- Placeholder State -->
+<div class="p-16 text-center bg-white border border-slate-200 rounded-xl shadow-sm">
+  <div
+    class="w-16 h-16 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-100"
+  >
+    <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        d="M12 18a3.75 3.75 0 0 0 .495-7.468l-3.378-.454A3.75 3.75 0 0 1 5.625 6.33a3.75 3.75 0 0 1 7.241-1.066m0 0A4.617 4.617 0 0 0 12 3a4.012 4.012 0 0 0-3.327 1.777m6.654 0L18 6.33a3.75 3.75 0 0 1-3.6 3.6h-3.6"
+      />
+    </svg>
+  </div>
+  <h3 class="text-lg font-bold font-display text-slate-800 mb-1">Ready to analyse</h3>
+  <p class="text-slate-400 text-sm max-w-md mx-auto">Enter a SET ticker symbol above — e.g. PTT, KBANK or CPF</p>
+</div>
+{% endif %}
+
+<!-- Marked.js & DOMPurify for secure Markdown rendering -->
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.1/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.2/dist/purify.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // Form spinner logic
+    const form = document.getElementById('analysis-form');
+    const btn = document.getElementById('analyse-submit-btn');
+    const spinner = document.getElementById('btn-spinner');
+    const btnText = document.getElementById('btn-text');
+
+    if (form) {
+      form.addEventListener('submit', () => {
+        btn.disabled = true;
+        spinner.classList.remove('hidden');
+        btnText.textContent = 'Analyzing...';
+        btn.classList.add('opacity-80', 'cursor-not-allowed');
+      });
+    }
+
+    // Markdown renderer
+    document.querySelectorAll('.ai-response-markdown').forEach((container) => {
+      const rawMarkdown = container.querySelector('.raw-markdown').textContent;
+      container.querySelector('.rendered-html').innerHTML = DOMPurify.sanitize(marked.parse(rawMarkdown));
+    });
+  });
+</script>
+{% endblock %}

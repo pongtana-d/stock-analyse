@@ -95,3 +95,14 @@ def _resample_to_4h(df: pd.DataFrame) -> pd.DataFrame:
         {"Open": "first", "High": "max", "Low": "min", "Close": "last", "Volume": "sum"}
     )
     return resampled.dropna()
+
+
+def validate_ticker(ticker: str) -> bool:
+    """Validate if the ticker exists and has recent history on yfinance."""
+    try:
+        _rate_limit()
+        tk = yf.Ticker(ticker)
+        df = tk.history(period="1d", timeout=10.0)
+        return not df.empty
+    except Exception:
+        return False

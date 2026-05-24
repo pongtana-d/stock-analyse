@@ -125,15 +125,54 @@ class StockResponse(BaseModel):
 # --- Portfolio ---
 
 
-class PortfolioStock(BaseModel):
+class PortfolioItem(BaseModel):
     ticker: str
-    name: str
-    notes: str = ""
 
 
-class Portfolio(BaseModel):
-    stocks: list[PortfolioStock] = []
-    updatedAt: str | None = None
+class PortfolioList(BaseModel):
+    tickers: list[str] = []
+
+
+# --- Analysis ---
+
+
+class AnalysisRecord(BaseModel):
+    id: int
+    ticker: str
+    ai_model: str
+    system_prompt: str | None = None
+    indicator_data: dict | None = None
+    ai_response: str
+    signal: str | None = None
+    confidence: str | None = None
+    analysis_date: str
+    created_at: str
+
+
+class AnalysisRunSummary(BaseModel):
+    ticker: str
+    signal: str | None = None
+    confidence: str | None = None
+    analysis_date: str
+    error: str | None = None
+
+
+class AnalysisRunResponse(BaseModel):
+    triggered_at: str
+    market_open: bool
+    results: list[AnalysisRunSummary] = []
+
+
+# --- Config ---
+
+
+class ConfigItem(BaseModel):
+    key: str
+    value: str
+
+
+class ConfigUpdate(BaseModel):
+    value: str
 
 
 # --- Health ---

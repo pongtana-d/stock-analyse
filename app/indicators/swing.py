@@ -11,16 +11,11 @@ from __future__ import annotations
 import pandas as pd
 
 from app.models.schemas import SwingData, SwingPoint
+from app.indicators import format_indicator_date
 
 _LOOKBACK: int = 100   # bars to scan for swings
 _ORDER: int = 5        # bars on each side required to qualify as a swing
 _MAX_POINTS: int = 10  # max swing points returned (keep context window small)
-
-
-def _format_date(ts) -> str:
-    if hasattr(ts, "hour") and ts.hour != 0:
-        return ts.strftime("%Y-%m-%d %H:%M")
-    return ts.strftime("%Y-%m-%d")
 
 
 def calculate_swing_points(df: pd.DataFrame) -> SwingData:
@@ -45,7 +40,7 @@ def calculate_swing_points(df: pd.DataFrame) -> SwingData:
         ):
             raw.append(
                 (i, SwingPoint(
-                    date=_format_date(dates[i]),
+                    date=format_indicator_date(dates[i]),
                     price=round(float(highs[i]), 2),
                     type="high",
                 ))
@@ -58,7 +53,7 @@ def calculate_swing_points(df: pd.DataFrame) -> SwingData:
         ):
             raw.append(
                 (i, SwingPoint(
-                    date=_format_date(dates[i]),
+                    date=format_indicator_date(dates[i]),
                     price=round(float(lows[i]), 2),
                     type="low",
                 ))

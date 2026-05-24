@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 import talib
 import pandas as pd
 
@@ -11,8 +12,6 @@ from app.models.schemas import EMAData
 def calculate_ema(df: pd.DataFrame) -> EMAData:
     close = df["Close"].values
     result = EMAData()
-
-    import math
 
     if len(close) >= 20:
         ema20 = talib.EMA(close, timeperiod=20)

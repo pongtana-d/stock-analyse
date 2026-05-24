@@ -9,6 +9,11 @@
       "ticker": "MINT.BK",
       "name": "Minor International",
       "notes": ""
+    },
+    {
+      "ticker": "BTS.BK",
+      "name": "BTS Group Holdings",
+      "notes": ""
     }
   ],
   "updatedAt": "2026-05-08T09:58:55.198884+00:00"

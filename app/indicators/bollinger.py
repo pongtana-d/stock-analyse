@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 import talib
 import pandas as pd
 
@@ -13,8 +14,6 @@ def calculate_bollinger(df: pd.DataFrame) -> BollingerData:
 
     if len(close) < 20:
         return BollingerData()
-
-    import math
     upper, middle, lower = talib.BBANDS(
         close, timeperiod=20, nbdevup=2, nbdevdn=2, matype=0
     )

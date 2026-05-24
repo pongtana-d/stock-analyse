@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}Dashboard · SET Analyze{% endblock %}
+{% block content %}
+<div class="mb-8">
+    <h1 class="text-3xl font-extrabold font-display tracking-tight text-slate-900 mb-1">Dashboard</h1>
+    <p class="text-slate-500 text-sm">Portfolio overview and latest signals from เซ็ตจัง</p>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+    <!-- Watchlist Card -->
+    <div class="bg-white border border-slate-200 rounded-xl p-6 hover:border-emerald-500/50 hover:shadow-lg hover:shadow-emerald-500/5 transition-all duration-300 relative overflow-hidden group">
+        <div class="absolute -right-10 -bottom-10 w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl group-hover:bg-emerald-500/10 transition-colors"></div>
+        <div class="text-xs font-semibold uppercase tracking-wider text-slate-400">Watchlist</div>
+        <div class="text-5xl font-extrabold font-display text-slate-900 mt-2 mb-4">{{ tickers|length }} <span class="text-xs font-normal text-slate-500">stocks</span></div>
+        <a href="/portfolio" class="text-emerald-600 font-semibold hover:text-emerald-700 inline-flex items-center gap-1 group/link text-sm">
+            Manage Portfolio 
+            <svg class="w-4 h-4 group-hover/link:translate-x-1 transition-transform" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"></path></svg>
+        </a>
+    </div>
+
+    <!-- Recent Analyses Card -->
+    <div class="bg-white border border-slate-200 rounded-xl p-6 hover:border-emerald-500/50 hover:shadow-lg hover:shadow-emerald-500/5 transition-all duration-300 relative overflow-hidden group">
+        <div class="absolute -right-10 -bottom-10 w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl group-hover:bg-emerald-500/10 transition-colors"></div>
+        <div class="text-xs font-semibold uppercase tracking-wider text-slate-400">Recent Analyses</div>
+        <div class="text-5xl font-extrabold font-display text-slate-900 mt-2 mb-4">{{ history|length }} <span class="text-xs font-normal text-slate-500">records</span></div>
+        <a href="/analysis" class="text-emerald-600 font-semibold hover:text-emerald-700 inline-flex items-center gap-1 group/link text-sm">
+            View Analyses 
+            <svg class="w-4 h-4 group-hover/link:translate-x-1 transition-transform" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"></path></svg>
+        </a>
+    </div>
+</div>
+
+<div class="mb-4">
+    <h2 class="text-xl font-bold font-display text-slate-900">Latest Signals</h2>
+</div>
+
+{% if history %}
+<div class="relative overflow-x-auto shadow-sm rounded-xl border border-slate-200 bg-white">
+    <table class="w-full text-sm text-left text-slate-700">
+        <thead class="text-xs text-slate-500 uppercase bg-slate-50 border-b border-slate-200">
+            <tr>
+                <th scope="col" class="px-6 py-4">Ticker</th>
+                <th scope="col" class="px-6 py-4">Signal</th>
+                <th scope="col" class="px-6 py-4">Confidence</th>
+                <th scope="col" class="px-6 py-4">When</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in history %}
+            <tr class="bg-white border-b border-slate-200/60 hover:bg-slate-50 transition-colors">
+                <td class="px-6 py-4 font-semibold text-slate-900">
+                    {{ r.ticker }}
+                </td>
+                <td class="px-6 py-4">
+                    {% set sig = (r.signal or '')|upper %}
+                    {% if sig == 'BUY' %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">BUY</span>
+                    {% elif sig == 'BUY ON DIP' %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-teal-50 text-teal-700 border border-teal-200">BUY ON DIP</span>
+                    {% elif sig == 'SELL' %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">SELL</span>
+                    {% elif sig == 'TAKE PROFIT' %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">TAKE PROFIT</span>
+                    {% elif sig == 'REDUCE' %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-orange-55 text-orange-700 border border-orange-200">REDUCE</span>
+                    {% elif sig == 'HOLD' %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">HOLD</span>
+                    {% else %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-50 text-slate-550 border border-slate-200">{{ r.signal or '—' }}</span>
+                    {% endif %}
+                </td>
+                <td class="px-6 py-4">
+                    {% if r.confidence == 'High' %}
+                        <span class="text-emerald-600 font-semibold">{{ r.confidence }}</span>
+                    {% elif r.confidence == 'Medium' %}
+                        <span class="text-teal-600 font-semibold">{{ r.confidence }}</span>
+                    {% elif r.confidence == 'Low' %}
+                        <span class="text-amber-600 font-semibold">{{ r.confidence }}</span>
+                    {% else %}
+                        <span class="text-slate-500">{{ r.confidence or '—' }}</span>
+                    {% endif %}
+                </td>
+                <td class="px-6 py-4 text-slate-500 text-xs font-mono">
+                    {{ r.analysis_date|format_datetime }}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="p-8 text-center bg-white border border-dashed border-slate-200 rounded-xl shadow-sm">
+    <svg class="w-10 h-10 mx-auto text-slate-400 mb-3" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+    <p class="text-slate-400 text-sm font-medium">No analyses yet</p>
+</div>
+{% endif %}
+{% endblock %}

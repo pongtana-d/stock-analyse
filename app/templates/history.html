@@ -1,0 +1,268 @@
+{% extends "base.html" %}
+{% block title %}History · SET Analyze{% endblock %}
+{% block content %}
+<div class="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+        <h1 class="text-3xl font-extrabold font-display tracking-tight text-slate-900 mb-1">Analysis History</h1>
+        <p class="text-slate-500 text-sm">All recorded AI technical analysis results, newest first.</p>
+    </div>
+</div>
+
+<!-- Controls Card -->
+<div class="bg-white border border-slate-200 rounded-xl p-6 mb-8 shadow-sm">
+    <form action="/history" method="get" class="flex flex-col md:flex-row md:items-end gap-4" id="filter-form">
+        <div class="flex-grow">
+            <label for="ticker-input" class="block mb-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">Ticker Symbol</label>
+            <input type="text" id="ticker-input" name="ticker" placeholder="e.g. KBANK.BK" value="{{ filter_ticker }}"
+                   class="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block p-2.5 placeholder-slate-400 transition-colors uppercase focus:bg-white">
+        </div>
+        <div class="w-full md:w-48">
+            <label for="start-date" class="block mb-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">Start Date</label>
+            <input type="date" id="start-date" name="start_date" value="{{ start_date }}"
+                   class="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block p-2.5 transition-colors focus:bg-white">
+        </div>
+        <div class="w-full md:w-48">
+            <label for="end-date" class="block mb-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">End Date</label>
+            <input type="date" id="end-date" name="end_date" value="{{ end_date }}"
+                   class="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block p-2.5 transition-colors focus:bg-white">
+        </div>
+        <div class="flex gap-2 w-full md:w-auto">
+            <button type="submit" class="flex-1 md:flex-none text-slate-950 bg-emerald-400 hover:bg-emerald-500 font-bold rounded-lg text-sm px-6 py-2.5 transition-colors focus:ring-4 focus:ring-emerald-200" id="filter-submit">
+                Filter
+            </button>
+            <a href="/history" class="text-center text-slate-700 bg-slate-100 hover:bg-slate-200 font-semibold rounded-lg text-sm px-4 py-2.5 transition-colors" id="filter-reset">
+                Reset
+            </a>
+        </div>
+    </form>
+    
+    <div class="flex flex-wrap items-center justify-between gap-3 mt-5 pt-5 border-t border-slate-200">
+        <span class="text-xs text-slate-400 font-medium">Showing up to 100 most recent records</span>
+        <div class="flex gap-2">
+            <form action="/history/purge" method="post" class="inline">
+                <button type="submit" class="text-rose-600 hover:text-white border border-rose-200 hover:bg-rose-600 font-semibold rounded-lg text-xs px-4 py-2.5 transition-all"
+                        onclick="return confirm('Purge old analysis history?')" id="purge-old-btn">
+                    Purge Old History
+                </button>
+            </form>
+            <form action="/history/clear_all" method="post" class="inline">
+                <button type="submit" class="text-white bg-rose-600 hover:bg-rose-700 font-semibold rounded-lg text-xs px-4 py-2.5 transition-all shadow-sm shadow-rose-600/20"
+                        onclick="return confirm('Are you sure you want to DELETE ALL history? This cannot be undone.')" id="clear-all-btn">
+                    Clear All History
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- History List -->
+{% if records %}
+<div class="relative overflow-x-auto shadow-sm rounded-xl border border-slate-200 bg-white">
+    <table class="w-full text-sm text-left text-slate-700">
+        <thead class="text-xs text-slate-500 uppercase bg-slate-50 border-b border-slate-200">
+            <tr>
+                <th scope="col" class="px-6 py-4">Ticker</th>
+                <th scope="col" class="px-6 py-4">Signal</th>
+                <th scope="col" class="px-6 py-4">Confidence</th>
+                <th scope="col" class="px-6 py-4">Analysis Date</th>
+                <th scope="col" class="px-6 py-4 text-right">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in records %}
+            <tr class="history-row bg-white border-b border-slate-200/60 hover:bg-slate-50/70 transition-all cursor-pointer group"
+                data-ticker="{{ r.ticker }}"
+                data-signal="{{ r.signal or '' }}"
+                data-confidence="{{ r.confidence or '' }}"
+                data-date="{{ r.analysis_date|format_datetime }}"
+                data-model="{{ r.ai_model }}">
+                <td class="px-6 py-4 font-bold text-slate-900 tracking-wider">
+                    {{ r.ticker }}
+                </td>
+                <td class="px-6 py-4">
+                    {% set sig = (r.signal or '')|upper %}
+                    {% if sig == 'BUY' %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">BUY</span>
+                    {% elif sig == 'BUY ON DIP' %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-teal-50 text-teal-700 border border-teal-200">BUY ON DIP</span>
+                    {% elif sig == 'SELL' %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">SELL</span>
+                    {% elif sig == 'TAKE PROFIT' %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">TAKE PROFIT</span>
+                    {% elif sig == 'REDUCE' %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-orange-50 text-orange-700 border border-orange-200">REDUCE</span>
+                    {% elif sig == 'HOLD' %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">HOLD</span>
+                    {% else %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-50 text-slate-550 border border-slate-200">{{ r.signal or '—' }}</span>
+                    {% endif %}
+                </td>
+                <td class="px-6 py-4">
+                    {% if r.confidence == 'High' %}
+                        <span class="text-emerald-600 font-semibold">{{ r.confidence }}</span>
+                    {% elif r.confidence == 'Medium' %}
+                        <span class="text-teal-600 font-semibold">{{ r.confidence }}</span>
+                    {% elif r.confidence == 'Low' %}
+                        <span class="text-amber-600 font-semibold">{{ r.confidence }}</span>
+                    {% else %}
+                        <span class="text-slate-500">{{ r.confidence or '—' }}</span>
+                    {% endif %}
+                </td>
+                <td class="px-6 py-4 text-slate-500 font-mono text-xs">
+                    {{ r.analysis_date|format_datetime }}
+                </td>
+                <td class="px-6 py-4 text-right">
+                    <button type="button" class="text-emerald-600 hover:text-emerald-700 font-semibold text-xs inline-flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
+                        Details
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"></path></svg>
+                    </button>
+                    <!-- Raw AI Markdown storage for javascript extraction -->
+                    <textarea class="hidden raw-markdown-content">{{ r.ai_response }}</textarea>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="p-12 text-center bg-white border border-dashed border-slate-200 rounded-xl shadow-sm">
+    <svg class="w-12 h-12 mx-auto text-slate-450 mb-3" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+    <p class="text-slate-500 text-sm font-medium">No analysis records match your filters.</p>
+</div>
+{% endif %}
+
+<!-- Detail Modal -->
+<div id="details-modal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+    <div class="relative p-4 w-full max-w-4xl max-h-full">
+        <!-- Modal content -->
+        <div class="relative bg-white rounded-xl shadow-2xl border border-slate-200 flex flex-col max-h-[90vh]">
+            <!-- Modal header -->
+            <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t border-slate-100">
+                <div>
+                    <h3 class="text-2xl font-bold font-display text-slate-900" id="modal-title">
+                        Stock Analysis
+                    </h3>
+                    <p class="text-xs text-slate-550 font-mono mt-1" id="modal-date"></p>
+                </div>
+                <button type="button" class="text-slate-400 bg-transparent hover:bg-slate-100 hover:text-slate-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center transition-colors" data-modal-hide="details-modal">
+                    <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                    </svg>
+                    <span class="sr-only">Close modal</span>
+                </button>
+            </div>
+            <!-- Modal body -->
+            <div class="p-6 overflow-y-auto flex-grow space-y-4">
+                <div class="flex items-center gap-2 mb-2" id="modal-badges">
+                    <!-- Dynamic badges go here -->
+                </div>
+                <div id="modal-content" class="prose prose-slate max-w-none text-slate-700 bg-slate-50 border border-slate-200 p-6 rounded-xl leading-relaxed">
+                    <!-- Rendered markdown goes here -->
+                </div>
+            </div>
+            <!-- Modal footer -->
+            <div class="flex items-center p-4 border-t border-slate-100 rounded-b">
+                <span class="text-xs text-slate-500">Model: <span class="font-mono text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200" id="modal-model"></span></span>
+                <button data-modal-hide="details-modal" type="button" class="ms-auto text-slate-950 bg-emerald-400 hover:bg-emerald-500 font-bold rounded-lg text-xs px-5 py-2.5 transition-colors focus:ring-4 focus:ring-emerald-100">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Marked.js & DOMPurify for secure Markdown rendering -->
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.1/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.2/dist/purify.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Modal management logic
+        const modal = document.getElementById('details-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalDate = document.getElementById('modal-date');
+        const modalBadges = document.getElementById('modal-badges');
+        const modalContent = document.getElementById('modal-content');
+        const modalModel = document.getElementById('modal-model');
+        
+        let backdrop = null;
+
+        function showModal(data) {
+            modalTitle.textContent = `${data.ticker} — SET Analyze`;
+            modalDate.textContent = data.date;
+            modalModel.textContent = data.model;
+            
+            // Build badges HTML
+            let badgesHtml = '';
+            if (data.signal) {
+                const sig = data.signal.toUpperCase();
+                let sigClass = 'bg-slate-150 text-slate-700 border-slate-200';
+                if (sig === 'BUY') sigClass = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+                else if (sig === 'BUY ON DIP') sigClass = 'bg-teal-50 text-teal-700 border-teal-200';
+                else if (sig === 'SELL') sigClass = 'bg-rose-50 text-rose-700 border-rose-200';
+                else if (sig === 'TAKE PROFIT') sigClass = 'bg-amber-50 text-amber-700 border-amber-200';
+                else if (sig === 'REDUCE') sigClass = 'bg-orange-50 text-orange-700 border-orange-200';
+                else if (sig === 'HOLD') sigClass = 'bg-slate-100 text-slate-700 border-slate-200';
+                
+                badgesHtml += `<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${sigClass} border">${sig}</span>`;
+            }
+            if (data.confidence) {
+                let confClass = 'bg-slate-50 text-slate-600 border-slate-200/50';
+                if (data.confidence === 'High') confClass = 'bg-emerald-50 text-emerald-700 border-emerald-200/50';
+                else if (data.confidence === 'Medium') confClass = 'bg-teal-50 text-teal-700 border-teal-200/50';
+                
+                badgesHtml += `<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${confClass} border">Conf: ${data.confidence}</span>`;
+            }
+            modalBadges.innerHTML = badgesHtml;
+            
+            // Render markdown content
+            modalContent.innerHTML = DOMPurify.sanitize(marked.parse(data.rawMarkdown));
+            
+            // Open modal
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            
+            // Add custom backdrop to body
+            backdrop = document.createElement('div');
+            backdrop.className = 'fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-sm transition-opacity duration-300';
+            backdrop.id = 'details-modal-backdrop';
+            document.body.appendChild(backdrop);
+            
+            backdrop.addEventListener('click', hideModal);
+        }
+
+        function hideModal() {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            
+            const bd = document.getElementById('details-modal-backdrop');
+            if (bd) {
+                bd.remove();
+            }
+        }
+
+        // Add event listeners on each row click
+        document.querySelectorAll('.history-row').forEach(row => {
+            row.addEventListener('click', () => {
+                const ticker = row.getAttribute('data-ticker');
+                const signal = row.getAttribute('data-signal');
+                const confidence = row.getAttribute('data-confidence');
+                const date = row.getAttribute('data-date');
+                const model = row.getAttribute('data-model');
+                const rawMarkdown = row.querySelector('.raw-markdown-content').value;
+                
+                showModal({ ticker, signal, confidence, date, model, rawMarkdown });
+            });
+        });
+
+        // Close buttons in modal
+        document.querySelectorAll('[data-modal-hide="details-modal"]').forEach(btn => {
+            btn.addEventListener('click', hideModal);
+        });
+
+        // Listen for ESC key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                hideModal();
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Portfolio · SET Analyze{% endblock %}
+{% block content %}
+<div class="mb-6">
+    <h1 class="text-3xl font-extrabold font-display tracking-tight text-slate-900 mb-1">Portfolio</h1>
+    <p class="text-slate-500 text-sm">Stocks tracked and sent to AI for technical analysis</p>
+</div>
+
+<!-- Add Ticker Form -->
+<div class="bg-white border border-slate-200 rounded-xl p-6 mb-8 shadow-sm">
+    <form action="/portfolio/add" method="post" class="flex flex-col sm:flex-row gap-3" id="add-ticker-form">
+        <div class="flex-grow">
+            <input type="text" name="ticker" placeholder="Add ticker (e.g. CPF, KBANK)" required
+                   class="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block p-2.5 placeholder-slate-450 transition-colors uppercase focus:bg-white">
+        </div>
+        <button type="submit" class="text-slate-950 bg-emerald-400 hover:bg-emerald-500 font-bold rounded-lg text-sm px-6 py-2.5 transition-colors focus:ring-4 focus:ring-emerald-200" id="add-ticker-btn">
+            Add Stock
+        </button>
+    </form>
+</div>
+
+<div class="mb-4">
+    <h3 class="text-lg font-bold font-display text-slate-900">Tracked Stocks</h3>
+</div>
+
+{% if tickers %}
+<div class="relative overflow-x-auto shadow-sm rounded-xl border border-slate-200 bg-white">
+    <table class="w-full text-sm text-left text-slate-700">
+        <thead class="text-xs text-slate-500 uppercase bg-slate-50 border-b border-slate-200">
+            <tr>
+                <th scope="col" class="px-6 py-4">Ticker</th>
+                <th scope="col" class="px-6 py-4 text-right">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for t in tickers %}
+            <tr class="bg-white border-b border-slate-200/60 hover:bg-slate-50 transition-colors">
+                <td class="px-6 py-4 font-bold text-slate-900 tracking-wider">
+                    {{ t }}
+                </td>
+                <td class="px-6 py-4 text-right">
+                    <form action="/portfolio/remove" method="post" class="inline">
+                        <input type="hidden" name="ticker" value="{{ t }}">
+                        <button type="submit" class="text-rose-600 hover:text-white border border-rose-200 hover:bg-rose-600 font-semibold rounded-lg text-xs px-3.5 py-1.5 transition-all"
+                                onclick="return confirm('Remove {{ t }} from portfolio?')" id="remove-ticker-{{ t }}">
+                            Remove
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="p-8 text-center bg-white border border-dashed border-slate-200 rounded-xl shadow-sm">
+    <svg class="w-10 h-10 mx-auto text-slate-400 mb-3" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+    <p class="text-slate-400 text-sm font-medium">No stocks in your portfolio</p>
+</div>
+{% endif %}
+{% endblock %}

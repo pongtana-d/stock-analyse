@@ -1,0 +1,30 @@
+/* Custom scrollbar for a premium light theme look */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-track {
+    background: #f1f5f9; /* bg-slate-100 */
+}
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1; /* bg-slate-300 */
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8; /* bg-slate-400 */
+}
+
+/* Beautiful custom code block styling for AI responses */
+.ai-response {
+    background-color: #0f172a; /* bg-slate-900 */
+    border: 1px solid #1e293b; /* border-slate-800 */
+    color: #f1f5f9; /* text-slate-100 */
+    padding: 1.25rem;
+    border-radius: 0.75rem;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 0.9rem;
+    margin: 0.75rem 0 0.5rem;
+    line-height: 1.7;
+}

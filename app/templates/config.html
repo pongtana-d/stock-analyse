@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Config · SET Analyze{% endblock %}
+{% block content %}
+<div class="mb-8">
+    <h1 class="text-3xl font-extrabold font-display tracking-tight text-slate-900 mb-1">Configuration</h1>
+    <p class="text-slate-500 text-sm">AI provider settings, history retention policy, and Discord integrations</p>
+</div>
+
+<!-- AI Provider Settings -->
+<div class="bg-white border border-slate-200 rounded-xl p-6 mb-6 shadow-sm">
+    <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-200">
+        <h3 class="text-lg font-bold font-display text-slate-900">AI Provider</h3>
+        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-slate-100 text-slate-500 border border-slate-200">ENV CONFIG</span>
+    </div>
+    <div class="relative overflow-x-auto">
+        <table class="w-full text-sm text-left text-slate-700">
+            <tbody>
+                <tr class="border-b border-slate-200/50">
+                    <td class="py-3 pr-4 font-medium text-slate-500 w-44">Model</td>
+                    <td class="py-3 font-semibold text-slate-900 font-mono">{{ ai_model }}</td>
+                </tr>
+                <tr class="border-b border-slate-200/50">
+                    <td class="py-3 pr-4 font-medium text-slate-500">API URL</td>
+                    <td class="py-3 text-slate-600 font-mono">{{ ai_api_url or 'Default' }}</td>
+                </tr>
+                <tr class="border-b border-slate-200/50">
+                    <td class="py-3 pr-4 font-medium text-slate-500">API Key</td>
+                    <td class="py-3">
+                        {% if ai_api_key_set %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">SET</span>
+                        {% else %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">NOT SET</span>
+                        {% endif %}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <p class="text-xs text-slate-500 mt-4">Configured via <code class="text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded font-mono border border-slate-200">LITELLM_MODEL</code>, <code class="text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded font-mono border border-slate-200">AI_API_URL</code>, and <code class="text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded font-mono border border-slate-200">AI_API_KEY</code> in <code class="text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded font-mono border border-slate-200">.env</code>. Restart needed to apply.</p>
+</div>
+
+<!-- History Retention Form -->
+<div class="bg-white border border-slate-200 rounded-xl p-6 mb-6 shadow-sm">
+    <h3 class="text-lg font-bold font-display text-slate-900 mb-4">Retention Settings</h3>
+    <form action="/config/save" method="post">
+        <div class="mb-4">
+            <label for="history-retention" class="block mb-2 text-sm font-semibold text-slate-700">History Retention (days)</label>
+            <input type="number" id="history-retention" name="history_retention_days" value="{{ config.history_retention_days }}" min="1" required
+                   class="w-full md:w-64 bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block p-2.5 transition-colors focus:bg-white">
+        </div>
+        <button type="submit" class="text-slate-950 bg-emerald-400 hover:bg-emerald-500 font-bold rounded-lg text-sm px-6 py-2.5 transition-colors focus:ring-4 focus:ring-emerald-200" id="save-config-btn">
+            Save
+        </button>
+    </form>
+</div>
+
+<!-- Discord Integration -->
+<div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+    <h3 class="text-lg font-bold font-display text-slate-900 mb-4">Discord Bot Integration</h3>
+    {% if discord_configured %}
+        <div class="flex items-center gap-2 mb-3">
+            <span class="text-sm text-slate-600">Status:</span>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">CONFIGURED</span>
+        </div>
+    {% else %}
+        <div class="flex items-center gap-2 mb-3">
+            <span class="text-sm text-slate-600">Status:</span>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">NOT CONFIGURED</span>
+        </div>
+        <p class="text-xs text-slate-500">Set <code class="text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded font-mono border border-slate-200">DISCORD_BOT_TOKEN</code> and <code class="text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded font-mono border border-slate-200">DISCORD_USER_ID</code> in your <code class="text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded font-mono border border-slate-200">.env</code> file, then restart the server.</p>
+    {% endif %}
+</div>
+{% endblock %}
