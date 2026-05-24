@@ -33,6 +33,14 @@ def format_datetime(value: str) -> str:
             dt = datetime.strptime(value[:19], "%Y-%m-%d %H:%M:%S")
         except Exception:
             return value
+
+    # Convert to UTC+7 (Asia/Bangkok)
+    from datetime import timezone, timedelta
+    bangkok_tz = timezone(timedelta(hours=7))
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    dt = dt.astimezone(bangkok_tz)
+
     month_name = ENG_MONTHS[dt.month]
     return f"{dt.day} {month_name} {dt.year}, {dt.hour:02d}:{dt.minute:02d}"
 

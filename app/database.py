@@ -120,3 +120,28 @@ async def init_db() -> None:
                     logger.info("Migrated %d tickers from portfolio.json", len(tickers))
             except Exception as exc:  # pragma: no cover — best-effort migration
                 logger.warning("Failed to migrate portfolio.json: %s", exc)
+
+        # Backfill signal and confidence for existing analysis records where they are missing
+        try:
+            async with db.execute(
+                "SELECT id, ai_response FROM analysis_history WHERE signal IS NULL OR confidence IS NULL"
+            ) as cursor:
+                rows = await cursor.fetchall()
+            if rows:
+                from app.services.ai_analysis import parse_ai_response
+                backfilled_count = 0
+                for row in rows:
+                    row_id, ai_response = row[0], row[1]
+                    parsed = parse_ai_response(ai_response)
+                    sig, conf = parsed["signal"], parsed["confidence"]
+                    if sig or conf:
+                        await db.execute(
+                            "UPDATE analysis_history SET signal = ?, confidence = ? WHERE id = ?",
+                            (sig, conf, row_id),
+                        )
+                        backfilled_count += 1
+                if backfilled_count > 0:
+                    await db.commit()
+                    logger.info("Backfilled %d historical records with signal/confidence", backfilled_count)
+        except Exception as exc:
+            logger.warning("Failed to backfill historical records: %s", exc)

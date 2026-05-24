@@ -12,6 +12,16 @@ from app.main import app
 from app.repositories import portfolio_repo
 
 
+_MOCK_AI_RESULT = {
+    "signal": "BUY",
+    "confidence": "High",
+    "verdict": {"signal": "BUY", "confidence": "High", "horizon": "Swing"},
+    "analysis": "### WHY\n- test",
+    "raw_response": '```json\n{"signal": "BUY", "confidence": "High"}\n```\n### WHY\n- test',
+    "content": "**SIGNAL: BUY | Confidence: High**\nHorizon: Swing\n\n### WHY\n- test",
+}
+
+
 @pytest.fixture
 def client(init_test_db):
     with TestClient(app) as c:
@@ -58,7 +68,7 @@ class TestAnalysisRun:
              patch("app.routers.analysis.fetch_ohlcv", return_value=_fake_df()), \
              patch(
                  "app.services.ai_analysis.analyze_stock",
-                 new=AsyncMock(return_value="SIGNAL: BUY | Confidence: High"),
+                 new=AsyncMock(return_value=_MOCK_AI_RESULT),
              ), \
              patch(
                  "app.services.discord.is_configured", return_value=False
@@ -80,7 +90,7 @@ class TestAnalysisRun:
              patch("app.routers.analysis.fetch_ohlcv", return_value=_fake_df()), \
              patch(
                  "app.services.ai_analysis.analyze_stock",
-                 new=AsyncMock(return_value="SIGNAL: BUY | Confidence: High"),
+                 new=AsyncMock(return_value=_MOCK_AI_RESULT),
              ), \
              patch("app.services.discord.is_configured", return_value=True), \
              patch("app.services.discord.send_dm", new=AsyncMock(return_value=True)) as mock_send_dm:

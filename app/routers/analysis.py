@@ -55,20 +55,22 @@ async def _analyze_one(
         if not indicators["indicators"]:
             raise RuntimeError("no indicator data available")
 
-        ai_text = await ai_analysis.analyze_stock(
+        result = await ai_analysis.analyze_stock(
             ticker=ticker,
             indicators_data=indicators,
             model=model,
             system_prompt=prompt,
         )
-        signal, confidence = ai_analysis.parse_signal(ai_text)
+        signal = result["signal"]
+        confidence = result["confidence"]
+        content = result["content"]
 
         await analysis_repo.save_analysis(
             ticker=ticker,
             ai_model=model,
             system_prompt=prompt,
             indicator_data=indicators,
-            ai_response=ai_text,
+            ai_response=content,
             signal=signal,
             confidence=confidence,
             analysis_date=when,
@@ -77,9 +79,8 @@ async def _analyze_one(
         if send_discord and discord.is_configured():
             embed = ai_analysis.format_for_discord(
                 ticker=ticker,
-                ai_response=ai_text,
+                content=content,
                 signal=signal,
-                confidence=confidence,
             )
             await discord.send_dm(embed)
 
