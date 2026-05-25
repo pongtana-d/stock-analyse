@@ -170,7 +170,8 @@ class TestFormatReadableContent:
         }
         analysis = "### WHY\n- EMA bullish\n- Volume spike"
         result = ai_analysis.format_readable_content(verdict, analysis)
-        assert "**SIGNAL: BUY | Confidence: High**" in result
+        assert "**SIGNAL: BUY**" in result
+        assert "**Confidence: High**" in result
         assert "Horizon: Swing" in result
         assert "R:R 1:2.8" in result
         assert "Entry: 12.4" in result
@@ -209,7 +210,8 @@ class TestFormatReadableContent:
     def test_verdict_without_optional_fields(self):
         verdict = {"signal": "SELL", "confidence": "Low"}
         result = ai_analysis.format_readable_content(verdict, "")
-        assert "**SIGNAL: SELL | Confidence: Low**" in result
+        assert "**SIGNAL: SELL**" in result
+        assert "**Confidence: Low**" in result
         assert "Entry" not in result
         assert "Supports" not in result
 

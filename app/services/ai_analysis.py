@@ -120,13 +120,10 @@ def format_readable_content(verdict: dict[str, Any] | None, analysis: str) -> st
         horizon = verdict.get("horizon", "")
 
         # Header line
-        header_items = []
         if signal:
-            header_items.append(f"SIGNAL: {signal}")
+            parts.append(f"**SIGNAL: {signal}**")
         if confidence:
-            header_items.append(f"Confidence: {confidence}")
-        if header_items:
-            parts.append(f"**{' | '.join(header_items)}**")
+            parts.append(f"**Confidence: {confidence}**")
 
         # Details line
         details: list[str] = []

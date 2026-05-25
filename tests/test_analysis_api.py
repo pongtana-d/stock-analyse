@@ -18,7 +18,7 @@ _MOCK_AI_RESULT = {
     "verdict": {"signal": "BUY", "confidence": "High", "horizon": "Swing"},
     "analysis": "### WHY\n- test",
     "raw_response": '```json\n{"signal": "BUY", "confidence": "High"}\n```\n### WHY\n- test',
-    "content": "**SIGNAL: BUY | Confidence: High**\nHorizon: Swing\n\n### WHY\n- test",
+    "content": "**SIGNAL: BUY**\n**Confidence: High**\nHorizon: Swing\n\n### WHY\n- test",
 }
 
 
