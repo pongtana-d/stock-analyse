@@ -255,24 +255,30 @@ def format_for_discord(
     ticker: str,
     content: str,
     signal: str | None,
-) -> dict[str, Any]:
-    """Build a Discord embed dict from formatted content."""
-    color_map = {
-        "BUY": 0x2ECC71,
-        "BUY ON DIP": 0x27AE60,
-        "SELL": 0xE74C3C,
-        "TAKE PROFIT": 0xF1C40F,
-        "REDUCE": 0xE67E22,
-        "HOLD": 0x95A5A6,
-    }
-    color = color_map.get(signal or "", 0x3498DB)
+    analysis_date: str | None = None,
+) -> str:
+    """Build a Discord plain text message from formatted content."""
+    title = f"{ticker} — SET Analyze"
+    if analysis_date:
+        try:
+            from datetime import datetime, timezone, timedelta
+            clean_val = analysis_date.strip().replace(" ", "T")
+            dt = datetime.fromisoformat(clean_val)
+            # Convert to UTC+7 (Asia/Bangkok)
+            bangkok_tz = timezone(timedelta(hours=7))
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=timezone.utc)
+            dt = dt.astimezone(bangkok_tz)
 
-    description = content.strip()
-    if len(description) > 4000:
-        description = description[:3997] + "..."
+            months = ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+            month_name = months[dt.month]
+            date_str = f"{dt.day} {month_name} {dt.year}, {dt.hour:02d}:{dt.minute:02d}"
+            title = f"{ticker} — SET Analyze ({date_str})"
+        except Exception as exc:
+            logger.warning("Failed to parse analysis_date for Discord title: %s", exc)
 
-    return {
-        "title": f"{ticker} — SET Analyze",
-        "description": description,
-        "color": color,
-    }
+    message = f"**{title}**\n\n{content.strip()}"
+    if len(message) > 2000:
+        message = message[:1997] + "..."
+
+    return message

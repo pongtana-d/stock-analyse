@@ -216,36 +216,40 @@ class TestFormatReadableContent:
 
 # --- format_for_discord ---
 
-def test_format_for_discord_truncates_and_sets_color():
-    embed = ai_analysis.format_for_discord(
+def test_format_for_discord_truncates():
+    msg = ai_analysis.format_for_discord(
         ticker="CPF.BK",
         content="x" * 5000,
         signal="BUY",
     )
-    assert embed["title"].startswith("CPF.BK")
-    assert embed["color"] == 0x2ECC71
-    assert len(embed["description"]) <= 4000
-
-
-def test_format_for_discord_unknown_signal_default_color():
-    embed = ai_analysis.format_for_discord(
-        ticker="X.BK", content="hi", signal=None
-    )
-    assert embed["color"] == 0x3498DB
+    assert msg.startswith("**CPF.BK")
+    assert len(msg) <= 2000
 
 
 def test_format_for_discord_uses_content_directly():
     content = "**SIGNAL: SELL | Confidence: Medium**\nHorizon: Swing\n\n### WHY\n- test"
-    embed = ai_analysis.format_for_discord(
+    msg = ai_analysis.format_for_discord(
         ticker="PTT.BK",
         content=content,
         signal="SELL",
     )
-    assert "SIGNAL: SELL" in embed["description"]
-    assert "Confidence: Medium" in embed["description"]
-    assert embed["color"] == 0xE74C3C
+    assert "SIGNAL: SELL" in msg
+    assert "Confidence: Medium" in msg
     # Content is used directly, not wrapped again
-    assert embed["description"].count("SIGNAL: SELL") == 1
+    assert msg.count("SIGNAL: SELL") == 1
+
+
+def test_format_for_discord_includes_date_in_title():
+    msg = ai_analysis.format_for_discord(
+        ticker="KBANK.BK",
+        content="analysis content",
+        signal="BUY",
+        analysis_date="2026-05-25T02:40:00Z"
+    )
+    # 2026-05-25T02:40:00Z in UTC -> 25 May 2026, 09:40 in Bangkok (UTC+7)
+    assert "KBANK.BK — SET Analyze (25 May 2026, 09:40)" in msg
+
+
 
 
 # --- analyze_stock parameters ---

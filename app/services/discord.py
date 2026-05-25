@@ -24,7 +24,7 @@ def is_configured() -> bool:
     return bool(token and user_id)
 
 
-async def send_dm(embed: dict[str, Any], content: str | None = None) -> bool:
+async def send_dm(content: str) -> bool:
     """Send a DM to the configured user. Returns True on success."""
     token, user_id = _config()
     if not token or not user_id:
@@ -47,9 +47,7 @@ async def send_dm(embed: dict[str, Any], content: str | None = None) -> bool:
             resp.raise_for_status()
             channel_id = resp.json()["id"]
 
-            payload: dict[str, Any] = {"embeds": [embed]}
-            if content:
-                payload["content"] = content
+            payload: dict[str, Any] = {"content": content}
 
             resp = await client.post(
                 f"{DISCORD_API}/channels/{channel_id}/messages",
@@ -61,3 +59,4 @@ async def send_dm(embed: dict[str, Any], content: str | None = None) -> bool:
         except httpx.HTTPError as exc:
             logger.error("Discord DM failed: %s", exc)
             return False
+

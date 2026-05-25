@@ -77,12 +77,13 @@ async def _analyze_one(
         )
 
         if send_discord and discord.is_configured():
-            embed = ai_analysis.format_for_discord(
+            discord_msg = ai_analysis.format_for_discord(
                 ticker=ticker,
                 content=content,
                 signal=signal,
+                analysis_date=when,
             )
-            await discord.send_dm(embed)
+            await discord.send_dm(discord_msg)
 
         return AnalysisRunSummary(
             ticker=ticker,
