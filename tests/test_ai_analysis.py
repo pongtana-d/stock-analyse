@@ -222,7 +222,7 @@ def test_format_for_discord_truncates():
         content="x" * 5000,
         signal="BUY",
     )
-    assert msg.startswith("**CPF.BK")
+    assert msg.startswith("## CPF.BK")
     assert len(msg) <= 2000
 
 

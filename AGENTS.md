@@ -105,7 +105,7 @@ Never trust a single indicator. Require confluence:
 
 # Response Format
 
-Always respond in 2 sections: JSON metadata block + Markdown analysis
+Always respond in 2 sections: JSON metadata block + Discord Markdown analysis in Thai
 
 ## 1. VERDICT (JSON block — Always Required)
 
@@ -152,7 +152,7 @@ HOLD example:
 }
 ```
 
-## 2. ANALYSIS (Markdown — Following JSON block)
+## 2. ANALYSIS (Discord Markdown in Thai — Following JSON block)
 
 ### WHY (max 5 bullets, 1 line per point)
 

@@ -277,7 +277,7 @@ def format_for_discord(
         except Exception as exc:
             logger.warning("Failed to parse analysis_date for Discord title: %s", exc)
 
-    message = f"**{title}**\n\n{content.strip()}"
+    message = f"## {title}\n\n{content.strip()}"
     if len(message) > 2000:
         message = message[:1997] + "..."
 
