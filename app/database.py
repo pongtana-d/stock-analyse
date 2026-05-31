@@ -84,6 +84,8 @@ async def init_db() -> None:
         defaults = {
             "history_retention_days": "90",
             "ai_model": os.getenv("LITELLM_MODEL", "openai/gpt-4o"),
+            "scheduler_enabled": "true",
+            "scheduler_frequency": "default",
         }
         for key, value in defaults.items():
             await db.execute(

@@ -24,25 +24,63 @@ router = APIRouter()
 
 TIMEFRAMES = ("weekly", "daily", "4h", "1h")
 
+# Recent OHLCV bars per timeframe handed to the AI for chart-pattern /
+# divergence inference and price-action context.
+_OHLC_BARS_FOR_AI = 30
+
+
+def _format_ohlc(df, tf: str) -> list[dict[str, Any]]:
+    """Serialize the last N OHLCV bars for the AI payload."""
+    recent = df.iloc[-_OHLC_BARS_FOR_AI:]
+    intraday = tf in ("4h", "1h")
+    bars: list[dict[str, Any]] = []
+    for idx, row in recent.iterrows():
+        bars.append(
+            {
+                "date": idx.strftime("%Y-%m-%d %H:%M") if intraday else idx.strftime("%Y-%m-%d"),
+                "open": round(float(row["Open"]), 2),
+                "high": round(float(row["High"]), 2),
+                "low": round(float(row["Low"]), 2),
+                "close": round(float(row["Close"]), 2),
+                "volume": int(row["Volume"]),
+            }
+        )
+    return bars
+
 
 async def _gather_indicators(ticker: str) -> dict[str, Any]:
-    """Fetch indicators across all timeframes for the AI prompt."""
-    payload: dict[str, Any] = {"ticker": ticker, "indicators": {}}
+    """Fetch indicators + recent OHLCV + current price for the AI prompt."""
+    payload: dict[str, Any] = {
+        "ticker": ticker,
+        "currentPrice": None,
+        "indicators": {},
+        "ohlc": {},
+    }
 
     async def fetch_tf(tf: str):
         try:
             df = await asyncio.to_thread(fetch_ohlcv, ticker, tf, 120)
             if df.empty:
-                return tf, None
-            return tf, compile_indicators(df)
+                return tf, None, None
+            return tf, compile_indicators(df), df
         except Exception as exc:
             logger.warning("Failed to fetch %s %s: %s", ticker, tf, exc)
-            return tf, None
+            return tf, None, None
 
     results = await asyncio.gather(*[fetch_tf(tf) for tf in TIMEFRAMES])
-    for tf, ind in results:
-        if ind is not None:
-            payload["indicators"][tf] = ind.model_dump()
+    last_closes: dict[str, float] = {}
+    for tf, ind, df in results:
+        if ind is None or df is None:
+            continue
+        payload["indicators"][tf] = ind.model_dump()
+        payload["ohlc"][tf] = _format_ohlc(df, tf)
+        last_closes[tf] = round(float(df["Close"].iloc[-1]), 2)
+
+    # Current price: prefer the most granular timeframe available.
+    for tf in ("1h", "4h", "daily", "weekly"):
+        if tf in last_closes:
+            payload["currentPrice"] = last_closes[tf]
+            break
     return payload
 
 
@@ -100,11 +138,15 @@ async def _analyze_one(
         )
 
 
-@router.post("/analysis/run", response_model=AnalysisRunResponse)
-async def run_analysis(
-    force: bool = Query(default=False, description="Skip trading-day check"),
-    send_discord: bool = Query(default=True, description="Send notifications to Discord"),
+async def execute_portfolio_run(
+    *, force: bool = False, send_discord: bool = True
 ) -> AnalysisRunResponse:
+    """Run AI analysis for every portfolio ticker.
+
+    Shared by the manual API endpoint and the in-app scheduler. When the SET
+    is closed and ``force`` is False, returns an empty result with
+    ``market_open=False`` instead of raising.
+    """
     triggered_at = datetime.now(timezone.utc).isoformat()
     today = datetime.now(timezone.utc).date()
 
@@ -115,9 +157,8 @@ async def run_analysis(
         open_today = True  # fail open
 
     if not open_today and not force:
-        raise HTTPException(
-            status_code=409,
-            detail="SET is not open today; pass force=true to run anyway.",
+        return AnalysisRunResponse(
+            triggered_at=triggered_at, market_open=False, results=[]
         )
 
     tickers = await portfolio_repo.get_all()
@@ -137,6 +178,27 @@ async def run_analysis(
     return AnalysisRunResponse(
         triggered_at=triggered_at, market_open=open_today, results=results
     )
+
+
+@router.post("/analysis/run", response_model=AnalysisRunResponse)
+async def run_analysis(
+    force: bool = Query(default=False, description="Skip trading-day check"),
+    send_discord: bool = Query(default=True, description="Send notifications to Discord"),
+) -> AnalysisRunResponse:
+    today = datetime.now(timezone.utc).date()
+    try:
+        open_today = market_calendar.is_trading_day(today)
+    except Exception as exc:
+        logger.warning("calendar check failed: %s", exc)
+        open_today = True
+
+    if not open_today and not force:
+        raise HTTPException(
+            status_code=409,
+            detail="SET is not open today; pass force=true to run anyway.",
+        )
+
+    return await execute_portfolio_run(force=force, send_discord=send_discord)
 
 
 @router.post("/analysis/run/{ticker}", response_model=AnalysisRunSummary)

@@ -16,7 +16,7 @@ async def list_config() -> list[ConfigItem]:
     return [ConfigItem(key=k, value=v) for k, v in sorted(data.items())]
 
 
-ALLOWED_KEYS = {"history_retention_days"}
+ALLOWED_KEYS = {"history_retention_days", "scheduler_enabled", "scheduler_frequency"}
 
 
 @router.get("/config/{key}", response_model=ConfigItem)
@@ -34,4 +34,7 @@ async def put_config(key: str, body: ConfigUpdate) -> ConfigItem:
         from fastapi import HTTPException
         raise HTTPException(status_code=400, detail=f"Config key '{key}' is not allowed.")
     await config_repo.set_config(key, body.value)
+    if key.startswith("scheduler_"):
+        from app.services import scheduler
+        await scheduler.reload_scheduler()
     return ConfigItem(key=key, value=body.value)

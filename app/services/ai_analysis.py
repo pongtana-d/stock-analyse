@@ -11,7 +11,7 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
-AGENTS_MD_PATH = Path(__file__).resolve().parent.parent.parent / "AGENTS.md"
+AGENTS_MD_PATH = Path(__file__).resolve().parent.parent.parent / "data" / "system-prompt.md"
 
 # Regex to extract fenced JSON code block from AI response
 _JSON_BLOCK_RE = re.compile(r"```json\s*\n(\{.*?\})\s*\n```", re.DOTALL)
@@ -204,7 +204,7 @@ async def analyze_stock(
         f"วิเคราะห์หุ้น {ticker} จากข้อมูล technical indicators ต่อไปนี้ "
         f"(JSON):\n\n```json\n"
         f"{json.dumps(indicators_data, ensure_ascii=False, default=str)}\n```\n\n"
-        f"ตอบตามรูปแบบที่กำหนดใน AGENTS.md: "
+        f"ตอบตามรูปแบบที่กำหนดใน system-prompt.md: "
         f"1) JSON verdict block ใน ```json ... ``` "
         f"2) ตามด้วย markdown analysis (WHY + CAVEATS) เป็นภาษาไทย."
     )

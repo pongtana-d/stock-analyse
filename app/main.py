@@ -29,8 +29,11 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     await init_db()
+    from app.services import scheduler
+    await scheduler.start_scheduler()
     logger.info("Database initialized; SET Analyze backend ready.")
     yield
+    await scheduler.shutdown_scheduler()
 
 
 app = FastAPI(

@@ -27,7 +27,7 @@ RUN uv sync --frozen --no-dev
 
 # Copy application source code
 COPY app/ app/
-COPY AGENTS.md AGENTS.md
+COPY data/system-prompt.md data/system-prompt.md
 
 # Ensure data directory exists
 RUN mkdir -p data

@@ -9,6 +9,8 @@ from app.database import get_db
 DEFAULTS: dict[str, str] = {
     "history_retention_days": "90",
     "ai_model": "openai/gpt-4o",
+    "scheduler_enabled": "true",
+    "scheduler_frequency": "default",
 }
 
 # Keys sourced from env vars — read-only in UI, never stored in DB

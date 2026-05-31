@@ -39,6 +39,48 @@
     <p class="text-xs text-slate-500 mt-4">Configured via <code class="text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded font-mono border border-slate-200">LITELLM_MODEL</code>, <code class="text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded font-mono border border-slate-200">AI_API_URL</code>, and <code class="text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded font-mono border border-slate-200">AI_API_KEY</code> in <code class="text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded font-mono border border-slate-200">.env</code>. Restart needed to apply.</p>
 </div>
 
+<!-- Auto-Analysis Scheduler -->
+<div class="bg-white border border-slate-200 rounded-xl p-6 mb-6 shadow-sm">
+    <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-200">
+        <h3 class="text-lg font-bold font-display text-slate-900">Auto-Analysis Scheduler</h3>
+        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-slate-100 text-slate-500 border border-slate-200">UTC+7 BANGKOK</span>
+    </div>
+    <p class="text-sm text-slate-500 mb-4">Runs analysis automatically for every portfolio ticker during SET trading hours on weekdays (holidays skipped). No external cron needed.</p>
+    <form action="/config/scheduler" method="post">
+        <div class="flex items-center justify-between mb-5">
+            <div>
+                <label for="scheduler-enabled" class="text-sm font-semibold text-slate-700">Enable scheduler</label>
+                <p class="text-xs text-slate-500 mt-0.5">
+                    {% if scheduler_enabled and scheduler_next_run %}
+                        Next run: <span class="font-mono text-slate-600">{{ scheduler_next_run | format_datetime }}</span>
+                    {% elif scheduler_enabled %}
+                        Active
+                    {% else %}
+                        Currently disabled
+                    {% endif %}
+                </p>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="scheduler-enabled" name="scheduler_enabled" value="true" class="sr-only peer" {% if scheduler_enabled %}checked{% endif %}>
+                <div class="w-11 h-6 bg-slate-200 peer-focus:ring-4 peer-focus:ring-emerald-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-400"></div>
+            </label>
+        </div>
+        <div class="mb-5">
+            <label for="scheduler-frequency" class="block mb-2 text-sm font-semibold text-slate-700">Frequency</label>
+            <select id="scheduler-frequency" name="scheduler_frequency"
+                    class="w-full md:w-80 bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block p-2.5 transition-colors focus:bg-white">
+                {% for key, preset in scheduler_presets.items() %}
+                <option value="{{ key }}" {% if scheduler_frequency == key %}selected{% endif %}>{{ preset[0] }}</option>
+                {% endfor %}
+            </select>
+            <p class="text-xs text-slate-500 mt-2">Default runs at the top of each hour 10:00-12:00 and 14:00-16:00, Mon-Fri.</p>
+        </div>
+        <button type="submit" class="text-slate-950 bg-emerald-400 hover:bg-emerald-500 font-bold rounded-lg text-sm px-6 py-2.5 transition-colors focus:ring-4 focus:ring-emerald-200" id="save-scheduler-btn">
+            Save
+        </button>
+    </form>
+</div>
+
 <!-- History Retention Form -->
 <div class="bg-white border border-slate-200 rounded-xl p-6 mb-6 shadow-sm">
     <h3 class="text-lg font-bold font-display text-slate-900 mb-4">Retention Settings</h3>

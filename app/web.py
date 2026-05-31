@@ -13,7 +13,7 @@ from fastapi.templating import Jinja2Templates
 
 from app.repositories import analysis_repo, config_repo, portfolio_repo
 from app.routers.analysis import _analyze_one
-from app.services import ai_analysis, calendar as market_calendar, discord
+from app.services import ai_analysis, calendar as market_calendar, discord, scheduler
 from app.services.yahoo import validate_ticker
 from app.dependencies import verify_web_auth, get_app_password
 
@@ -309,6 +309,10 @@ async def config_page(
             ai_model=ai_analysis.get_ai_model(),
             ai_api_url=ai_analysis.get_ai_api_url() or "(default)",
             ai_api_key_set=bool(ai_key),
+            scheduler_enabled=(cfg.get("scheduler_enabled", "false").lower() == "true"),
+            scheduler_frequency=cfg.get("scheduler_frequency", scheduler.DEFAULT_FREQUENCY),
+            scheduler_presets=scheduler.FREQUENCY_PRESETS,
+            scheduler_next_run=scheduler.get_next_run(),
             message=message,
             error=error,
         ),
@@ -321,3 +325,16 @@ async def config_save(
 ):
     await config_repo.set_config("history_retention_days", history_retention_days.strip())
     return RedirectResponse("/config?message=Saved", status_code=303)
+
+
+@router.post("/config/scheduler")
+async def config_scheduler_save(
+    scheduler_frequency: str = Form(...),
+    scheduler_enabled: str = Form(default="false"),
+):
+    enabled = "true" if scheduler_enabled in ("true", "on", "1") else "false"
+    freq = scheduler_frequency if scheduler_frequency in scheduler.FREQUENCY_PRESETS else scheduler.DEFAULT_FREQUENCY
+    await config_repo.set_config("scheduler_enabled", enabled)
+    await config_repo.set_config("scheduler_frequency", freq)
+    await scheduler.reload_scheduler()
+    return RedirectResponse("/config?message=Scheduler+settings+saved", status_code=303)
